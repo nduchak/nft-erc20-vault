@@ -1,2 +1,19 @@
-# nft-erc20-vault
-Simple NFT composable token
+This is a hardhat project
+
+### Install dependencies
+
+```
+yarn
+```
+
+### Compile
+
+```
+yarn compile
+```
+
+### Test (truffle test files supported in `test/`)
+
+```
+yarn test
+```
