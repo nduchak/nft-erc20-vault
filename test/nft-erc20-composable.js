@@ -66,7 +66,7 @@ describe("RewardDistribution", function () {
         expect(await this.composableNFT.balanceOfERC20(tokenId, this.myERC20.address)).to.equal('500')
     })
 
-    describe.only('Transfer ERC20 using NFT', function() {
+    describe('Transfer ERC20 using NFT', function() {
         beforeEach(async function() {
             await this.myERC20.approve(this.composableNFT.address, '500')
             await this.composableNFT.getERC20(this.alice, tokenId, this.myERC20.address, '500')
@@ -81,6 +81,26 @@ describe("RewardDistribution", function () {
         it('Fail on not owner transfer', async function() {
             await expect(this.composableNFT.connect(this.bobSigner).transferERC20(tokenId, this.bob, this.myERC20.address, '500'))
                 .to.be.revertedWith('Transaction reverted without a reason string')
+        })
+        it('Approved account of NFT can transfer tokens', async function() {
+            await this.composableNFT.approve(this.bob, tokenId);
+            const bobBalance = await this.myERC20.balanceOf(this.bob)
+            await this.composableNFT.connect(this.bobSigner).transferERC20(tokenId, this.bob, this.myERC20.address, '500')
+            await this.composableNFT.approve('0x0000000000000000000000000000000000000000', tokenId);
+
+            expect(await this.myERC20.balanceOf(this.bob)).to.equal(bobBalance.add('500'))
+            expect(await this.composableNFT.balanceOfERC20(tokenId, this.myERC20.address)).to.equal('0')
+            expect(await this.composableNFT.totalERC20Contracts(tokenId)).to.equal('0')
+        })
+        it('Approved operator of NFT can transfer tokens', async function() {
+            await this.composableNFT.setApprovalForAll(this.bob, true);
+            const bobBalance = await this.myERC20.balanceOf(this.bob)
+            await this.composableNFT.connect(this.bobSigner).transferERC20(tokenId, this.bob, this.myERC20.address, '500')
+            await this.composableNFT.setApprovalForAll(this.bob, false);
+
+            expect(await this.myERC20.balanceOf(this.bob)).to.equal(bobBalance.add('500'))
+            expect(await this.composableNFT.balanceOfERC20(tokenId, this.myERC20.address)).to.equal('0')
+            expect(await this.composableNFT.totalERC20Contracts(tokenId)).to.equal('0')
         })
     })
 })
