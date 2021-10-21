@@ -1,5 +1,3 @@
-# composable-challenge
-
 This is a hardhat project
 
 ### Install dependencies
