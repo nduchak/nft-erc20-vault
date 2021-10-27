@@ -1,10 +1,12 @@
 const { ethers } = require("hardhat");
+const { padLeft, toHex } = require("web3-utils");
 const { expect } = require("chai");
 
 
 describe("RewardDistribution", function () {
     this.timeout(100000)
     const tokenId = 1
+    const bytes1 = padLeft(toHex(tokenId), 32);
 
     before(async function () {
         this.ComposableNFT = await ethers.getContractFactory("MyComposableNFT")
@@ -19,15 +21,31 @@ describe("RewardDistribution", function () {
 
     beforeEach(async function () {
         this.composableNFT = await this.ComposableNFT.deploy()
+        this.composableNFT2 = await this.ComposableNFT.deploy()
         this.myERC20 = await this.MyERC20.deploy()
 
         await this.composableNFT.mint(this.alice, tokenId)
+        await this.composableNFT2.mint(this.alice, tokenId)
         await this.myERC20.mint(this.alice, 100000)
         await this.myERC20.mint(this.bob, 100000)
 
         expect(await this.myERC20.balanceOf(this.alice)).to.equal('100000')
         expect(await this.myERC20.balanceOf(this.bob)).to.equal('100000')
         expect(await this.composableNFT.ownerOf(tokenId)).to.equal(this.alice)
+        expect(await this.composableNFT2.ownerOf(tokenId)).to.equal(this.alice)
+    })
+
+    describe('Transfer ERC721 to Composable', function() {
+        it('Transfer to composable and back', async function() {
+            expect(await this.composableNFT.childExists(this.composableNFT2.address, tokenId)).to.equal(false);
+            await this.composableNFT2.safeTransferFromERC721(this.alice, this.composableNFT.address, tokenId, bytes1)
+            expect(await this.composableNFT.childExists(this.composableNFT2.address, tokenId)).to.equal(true);
+            expect((await this.composableNFT.ownerOfChild(this.composableNFT2.address, tokenId)).parentTokenId).to.equal(tokenId.toString());
+
+            await this.composableNFT.transferChild(tokenId, this.bob, this.composableNFT2.address, tokenId)
+            expect(await this.composableNFT.childExists(this.composableNFT2.address, tokenId)).to.equal(false);
+            expect(await this.composableNFT2.ownerOf(tokenId)).to.equal(this.bob);
+        })
     })
 
     describe('Transfer ERC20 to NFT', function() {

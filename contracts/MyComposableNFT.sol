@@ -63,7 +63,7 @@ contract MyComposableNFT is ERC721("MyComposable", "MYC") {
             // Case 3: Token owner is other contract
             // Or
             // Case 4: Token owner is user
-            return ERC998_MAGIC_VALUE << 224 | bytes32(uint256(uint160(rootOwnerAddress)) << 96);
+            return ERC998_MAGIC_VALUE << 224 | bytes32(uint256(uint160(rootOwnerAddress)));
         }
     }
 
@@ -109,6 +109,9 @@ contract MyComposableNFT is ERC721("MyComposable", "MYC") {
 //        emit Transfer(_from, _to, _tokenId);
     }
 
+    function safeTransferFromERC721(address from, address to, uint256 tokenId, bytes memory _data) public {
+        super.safeTransferFrom(from, to, tokenId, _data);
+    }
     ////////////////////////////////////////////////////////
     // ERC998ERC721 and ERC998ERC721Enumerable implementation
     ////////////////////////////////////////////////////////
